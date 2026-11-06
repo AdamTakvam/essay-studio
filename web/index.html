@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Essay Studio</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div id="app">
+  <!-- ============================== TOP WINDOW ============================== -->
+  <section id="top">
+    <header class="appbar">
+      <div class="brand"><span class="logo">✶</span> Essay Studio</div>
+      <div class="project">
+        <select id="projectSelect" aria-label="Project"></select>
+        <button class="ghost sm" id="newProject" title="New essay">＋ New</button>
+        <button class="ghost sm danger-text" id="deleteProject" title="Delete this essay">Delete</button>
+      </div>
+      <nav class="stepper" id="stepper" aria-label="Workflow">
+        <button class="step" data-stage="write"><span class="num">1</span><span class="lbl">Write</span></button>
+        <span class="rail"><span class="fill"></span></span>
+        <button class="step" data-stage="media"><span class="num">2</span><span class="lbl">Media</span></button>
+        <span class="rail"><span class="fill"></span></span>
+        <button class="step" data-stage="publish"><span class="num">3</span><span class="lbl">Publish</span></button>
+      </nav>
+    </header>
+
+    <div class="viewport">
+      <div class="track" id="track">
+
+        <!-- ------------------------------ WRITE ------------------------------ -->
+        <section class="stage" id="stage-write" data-stage="write">
+          <div class="write-grid">
+            <div class="pane">
+              <div class="pane-head">
+                <h2>Your essay</h2>
+                <span class="meta" id="essayCount">0 words</span>
+              </div>
+              <textarea id="essay" class="editor" spellcheck="true"
+                placeholder="Start typing your idea. Rough notes are fine. The AI draft on the right follows along as you write."></textarea>
+            </div>
+
+            <div class="gutter">
+              <button id="copyBtn" class="round" title="Replace your essay with the AI draft">
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <span class="gutter-lbl">Use AI<br>draft</span>
+            </div>
+
+            <div class="pane">
+              <div class="pane-head">
+                <h2>AI draft <span class="pulse" id="aiPulse" hidden></span></h2>
+                <label class="toggle" title="Rewrite automatically while you type"><input type="checkbox" id="aiLive" checked> Live</label>
+                <button class="ghost sm" id="aiRefresh" title="Rewrite now">↻ Rewrite</button>
+              </div>
+              <div class="field-row">
+                <label for="model">Model</label>
+                <select id="model"></select>
+              </div>
+              <label class="sub" for="sysPrompt">Style prompt <span class="hint">: tells the model how the draft should read</span></label>
+              <textarea id="sysPrompt" rows="4" class="sys"></textarea>
+              <textarea id="aiOut" class="editor ai" readonly placeholder="The AI draft appears here."></textarea>
+            </div>
+          </div>
+          <footer class="actionbar">
+            <span class="status" id="saveStatus">Not saved yet</span>
+            <div class="spacer"></div>
+            <button class="secondary" id="saveBtn">Save</button>
+            <button class="primary" id="toMedia">Create media <span aria-hidden="true">→</span></button>
+          </footer>
+        </section>
+
+        <!-- ------------------------------ MEDIA ------------------------------ -->
+        <section class="stage" id="stage-media" data-stage="media">
+          <div class="stage-scroll">
+            <div class="stage-intro">
+              <div>
+                <h1>Create media</h1>
+                <p>Tick the formats you want, adjust their settings, then generate. Review each result and approve the ones to publish.</p>
+              </div>
+              <div class="intro-actions">
+                <span class="meta" id="mediaModel"></span>
+                <button class="primary" id="generateSelected">Generate selected</button>
+              </div>
+            </div>
+            <div class="banner warn" id="staleBanner" hidden>
+              The essay changed after some media was generated. Items marked <b>Outdated</b> don't match the current text. Generate them again to update.
+            </div>
+            <div class="media-grid" id="mediaGrid"></div>
+          </div>
+          <footer class="actionbar">
+            <button class="ghost" id="backToWrite">← Back to writing</button>
+            <div class="spacer"></div>
+            <span class="status" id="approvedCount">0 approved</span>
+            <button class="primary" id="toPublish">Publish <span aria-hidden="true">→</span></button>
+          </footer>
+        </section>
+
+        <!-- ------------------------------ PUBLISH ----------------------------- -->
+        <section class="stage" id="stage-publish" data-stage="publish">
+          <div class="stage-scroll">
+            <div class="stage-intro">
+              <div>
+                <h1>Publish</h1>
+                <p>Your essay and every approved media item are bundled into a ready-to-upload package for each site you choose.</p>
+              </div>
+            </div>
+            <div class="publish-grid">
+              <div class="panel">
+                <h3>Package contents</h3>
+                <ul class="contents" id="pubContents"></ul>
+              </div>
+              <div class="panel">
+                <h3>Publish to</h3>
+                <div class="platforms" id="platformList"></div>
+                <div class="publish-cta">
+                  <button class="go" id="publishBtn">PUBLISH</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel results" id="pubResults" hidden>
+              <h3>Latest run <span class="meta" id="pubRunMeta"></span></h3>
+              <div id="pubResultList"></div>
+            </div>
+          </div>
+          <footer class="actionbar">
+            <button class="ghost" id="backToMedia">← Back to media</button>
+            <button class="ghost" id="startOver">↺ Edit essay</button>
+            <div class="spacer"></div>
+          </footer>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== SPLITTER ============================== -->
+  <div id="splitter" role="separator" aria-orientation="horizontal" aria-label="Resize panels" tabindex="0"></div>
+
+  <!-- ============================== BOTTOM WINDOW (tool output) ============ -->
+  <section id="bottom">
+    <div class="log-head">
+      <span>Tool output</span>
+      <span class="conn" id="conn">connecting…</span>
+      <div class="spacer"></div>
+      <label class="toggle"><input type="checkbox" id="logFollow" checked> Follow</label>
+      <button class="ghost sm" id="logClear">Clear</button>
+    </div>
+    <textarea id="log" readonly spellcheck="false" aria-label="Tool output"></textarea>
+  </section>
+</div>
+
+<dialog id="copyDialog">
+  <form method="dialog">
+    <h3>Replace your essay?</h3>
+    <p>This overwrites everything in your essay with the AI draft. Press <kbd>Ctrl</kbd>+<kbd>Z</kbd> in the editor to undo it.</p>
+    <label class="check"><input type="checkbox" id="copyDontAsk"> Don't show this message again</label>
+    <menu>
+      <button value="cancel" class="ghost">Cancel</button>
+      <button value="ok" class="primary">Replace</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="confirmDialog">
+  <form method="dialog">
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmText"></p>
+    <menu>
+      <button value="cancel" class="ghost">Cancel</button>
+      <button value="ok" class="primary" id="confirmOk">OK</button>
+    </menu>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
