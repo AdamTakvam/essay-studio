@@ -6,7 +6,8 @@ cd "$(dirname "$0")"
 if ! command -v ffmpeg >/dev/null; then
   echo "ffmpeg not found — install it first (e.g. sudo apt install ffmpeg)"; exit 1
 fi
-if [ ! -d .venv ]; then
+if [ ! -x .venv/bin/pip ]; then
+  rm -rf .venv
   python3 -m venv .venv
   .venv/bin/pip install -q --upgrade pip
 fi
